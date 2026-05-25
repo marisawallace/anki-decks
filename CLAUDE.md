@@ -133,20 +133,6 @@ correr	to run\n(irregular)	verb
 - To **add more** cards later: write a *new* TSV containing only the new cards and run `add_cards.py` again.
 
 
-## Authoring a deck from whole cloth (if asked)
-
-When asked to create a deck:
-1. **Decide and state assumptions** (don't over-ask — take a good stab): deck name (use `Parent::Child` for hierarchy), `note_type` (`basic-reverse` for vocab/term pairs, `basic` for Q&A/facts, `cloze` for facts-in-context), tags, and rough card count/scope.
-
-2. `python new_deck.py "Name" --note-type <t> --tags <...>` → note the slug.
-
-3. Generate the cards as a TSV and Write it to `tsvs/<slug>.tsv`.
-
-4. `python add_cards.py <slug> tsvs/<slug>.tsv`.
-
-5. `python generate.py --deck <slug>` and report: deck name, card count, and that the `.apkg` is in `output-decks/` and synced to the phone folder.
-
-
 ### Card-writing principles (make the decks excellent)
 
 - **One fact per card** (minimum-information principle). Split compound facts.
