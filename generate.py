@@ -20,7 +20,7 @@ from ankidecks.parse import ParsedDeck, parse_card, parse_deck_meta
 REPO_ROOT = Path(__file__).resolve().parent
 DECKS_DIR = REPO_ROOT / "decks"
 OUTPUT_DIR = REPO_ROOT / "output-decks"
-SYNC_DIR = Path.home() / "Documents" / "syncthing" / "anki-decks"
+SYNC_DIR = Path.home() / "Documents" / "syncthing" / "phone" / "anki-decks"
 
 
 def read_deck(folder: Path) -> ParsedDeck:
