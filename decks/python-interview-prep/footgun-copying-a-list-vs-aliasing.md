@@ -7,4 +7,4 @@ tags: [footgun, list]
 Footgun: copying a list vs aliasing
 
 # Back
-`b = a` aliases (same object). Copy: `b = a[:]`, `b = list(a)`, or `b = a.copy()`. Nested: `copy.deepcopy(a)`.
+`b = a` aliases (same object). Copy: `b = a[:]`, `b = list(a)`, or `b = a.copy()`. Nested: `import copy; copy.deepcopy(a)`.

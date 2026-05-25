@@ -7,4 +7,4 @@ tags: [stdlib, math]
 Number toolbox: gcd, integer sqrt, factorial, combinations
 
 # Back
-`math.gcd(a, b)`, `math.isqrt(n)` (exact int sqrt, e.g. primality bounds), `math.factorial(n)`, `math.comb(n, k)`, `math.perm(n, k)`.
+`import math; math.gcd(a, b)`, `math.isqrt(n)` (exact int sqrt, e.g. primality bounds), `math.factorial(n)`, `math.comb(n, k)`, `math.perm(n, k)`.

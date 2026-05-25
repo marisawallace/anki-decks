@@ -7,4 +7,4 @@ tags: [stdlib]
 N smallest / largest without full sort
 
 # Back
-`heapq.nsmallest(k, it)` / `heapq.nlargest(k, it, key=...)`.
+`import heapq; heapq.nsmallest(k, it)` / `heapq.nlargest(k, it, key=...)`.

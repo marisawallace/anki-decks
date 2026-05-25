@@ -7,4 +7,4 @@ tags: [stdlib]
 Positive and negative infinity
 
 # Back
-`float('inf')`, `float('-inf')`, or `math.inf`. Useful as initial min/max bounds.
+`float('inf')`, `float('-inf')`, or `math.inf` (with `import math`). Useful as initial min/max bounds.

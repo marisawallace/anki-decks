@@ -7,4 +7,4 @@ tags: [stdlib]
 Sum / running accumulate
 
 # Back
-`sum(xs)`, `sum(xs, start)`. Running totals: `itertools.accumulate(xs)`.
+`sum(xs)`, `sum(xs, start)`. Running totals: `import itertools; itertools.accumulate(xs)`.

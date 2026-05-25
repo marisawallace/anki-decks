@@ -7,4 +7,4 @@ tags: [list, stdlib]
 Iterate two lists in parallel (Ruby: `a.zip(b)`)
 
 # Back
-`for x, y in zip(a, b):`. Stops at the shorter; `itertools.zip_longest` to pad.
+`for x, y in zip(a, b):`. Stops at the shorter; `import itertools; itertools.zip_longest(a, b)` to pad.
