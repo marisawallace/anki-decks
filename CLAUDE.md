@@ -70,8 +70,8 @@ tags: [spanish, vocab]     # applied to every card in the deck
 
 ```markdown
 ---
-id: a1f3c9d24e8b4f7a9c2e6b1d8f0a3c57   # stable UUID = the note's identity
-tags: [irregular]                      # optional, merged with deck tags
+id: "a1f3c9d24e8b4f7a9c2e6b1d8f0a3c57"  # stable UUID = the note's identity (required, quoted)
+tags: [irregular]                       # optional, merged with deck tags
 ---
 # Front
 la casa
@@ -103,12 +103,12 @@ Re-importing a rebuilt `.apkg` *updates* a deck instead of duplicating it only b
 
 - `deck_id` is a fixed literal in `deck.yaml`, unique per deck.
 
-- A note's GUID is its **`card_id`** — the frontmatter `id` (a UUID minted by the tooling), falling back to the filename stem if absent. It is set directly on the note and is **independent of both card content and deck**, so:
+- A note's GUID is its **`card_id`** — the frontmatter `id`, a UUID minted by the tooling. It is **required** on every card (parsing fails loudly if missing — no filename-stem fallback) and is quoted in YAML so an all-digit value is never retyped to an int. It is set directly on the note and is **independent of both card content and deck**, so:
   - editing a card's text keeps its review history;
   - **renaming the `.md` file keeps its history** (identity is in the frontmatter);
   - **moving a card's `.md` to another deck folder keeps its history** (no `deck_id` is baked into the GUID).
 
-- Hand-authored cards without an `id` use the filename stem as identity — fine, but then renaming = a new card, and two such files sharing a stem across decks collide. `generate.py` fails loudly on any duplicate `card_id` or `deck_id`.
+- `new_card.py` / `add_cards.py` mint the `id` for you. To hand-author a card, copy an existing one and replace the `id` with a fresh UUID (e.g. `python -c "import uuid;print(uuid.uuid4().hex)"`). `generate.py` fails loudly on any duplicate `card_id` or `deck_id`.
 
 ## Terse authoring format (TSV) — how Claude should emit cards
 
@@ -124,7 +124,9 @@ correr	to run\n(irregular)	verb
 
 - **Don't emit an `id` column** — `add_cards.py` mints a UUID per card (writing UUIDs in the TSV just burns tokens). Only set `id` to deliberately override. - `tags` (optional) are split on commas/whitespace and merged with deck tags.
 
-- Use literal `\n` in a cell for a line break; reach for per-card `.md` only when a card genuinely needs rich multi-line markdown (lists, code blocks).
+- Use literal `\n` in a cell for a line break; reach for per-card `.md` only when a card genuinely needs rich multi-line markdown (lists, code blocks). Keep literal tabs out of cell content — a row with more columns than the header is rejected (it's almost always a stray tab).
+
+- `add_cards.py` validates the **whole** TSV before writing anything (unknown columns, empty/missing required fields, ragged rows) and aborts writing **zero** cards on any problem — so a rejected TSV never leaves a deck half-applied. Fix the reported row and re-run.
 
 **Run each TSV once.** `add_cards.py` is add-only: every row becomes a *new* card and the TSV is archived to `decks/<slug>/_sources/`. It does **not** update or de-duplicate, so re-running a TSV duplicates its cards.
 

@@ -118,11 +118,19 @@ def parse_deck_meta(yaml_text: str) -> DeckMeta:
 def parse_card(text: str, stem: str, deck_tags: tuple[str, ...] = ()) -> Card:
     """Parse one card file's text into a :class:`Card`.
 
-    ``stem`` is the filename without extension; it is the default card id.
-    ``deck_tags`` are merged ahead of any per-card ``tags``.
+    ``stem`` is the filename without extension, used only for error context — the
+    card's identity is its frontmatter ``id``, which is **required** (the tooling
+    mints one; see new_card.py / add_cards.py). ``deck_tags`` are merged ahead of
+    any per-card ``tags``.
     """
     meta, body = split_frontmatter(text)
-    card_id = str(meta.get("id") or stem)
+    if not meta.get("id"):
+        raise ValueError(
+            f"card {stem!r} has no 'id' in frontmatter — every card needs a "
+            "stable id. Create cards with new_card.py / add_cards.py (they mint "
+            "one), or add an `id:` line by hand."
+        )
+    card_id = str(meta["id"])
     card_tags = tuple(str(t) for t in (meta.get("tags") or []))
     fields = split_sections(body)
     if not fields:

@@ -1,12 +1,15 @@
 """Tests for the pure scaffolding helpers."""
 
 from ankidecks.parse import parse_card, parse_deck_meta
+import pytest
+
 from ankidecks.scaffold import (
     parse_tsv,
     render_card_md,
     render_deck_yaml,
     slugify,
     split_tags,
+    tsv_header,
 )
 
 
@@ -41,10 +44,16 @@ def test_render_card_md_omits_empty_optional_field():
     assert "{{c1::x}}" in text
 
 
-def test_render_card_md_writes_id_frontmatter_even_without_tags():
+def test_render_card_md_writes_quoted_id_frontmatter_even_without_tags():
     text = render_card_md("basic", {"Front": "a", "Back": "b"}, "uuid-3")
-    assert text.startswith("---\nid: uuid-3\n")
+    assert text.startswith('---\nid: "uuid-3"\n')
     assert "tags:" not in text
+
+
+def test_render_card_md_quoted_id_survives_all_digit_value():
+    # A quoted all-digit id must not be retyped to an int by the YAML parser.
+    text = render_card_md("basic", {"Front": "a", "Back": "b"}, "0012345")
+    assert parse_card(text, "ignored").card_id == "0012345"
 
 
 def test_parse_tsv_with_newline_escape():
@@ -52,8 +61,23 @@ def test_parse_tsv_with_newline_escape():
     assert rows == [{"front": "la casa", "back": "the house\nmore", "tags": "noun"}]
 
 
+def test_parse_tsv_allows_omitted_trailing_column():
+    rows = parse_tsv("front\tback\ttags\nla casa\tthe house\n")
+    assert rows == [{"front": "la casa", "back": "the house"}]
+
+
+def test_parse_tsv_rejects_extra_columns():
+    with pytest.raises(ValueError, match="data row 1: 3 columns but header has 2"):
+        parse_tsv("front\tback\na\tb\tc\n")
+
+
 def test_parse_tsv_empty():
     assert parse_tsv("") == []
+
+
+def test_tsv_header():
+    assert tsv_header("Front\tBack\tTags\nx\ty\n") == ["front", "back", "tags"]
+    assert tsv_header("") == []
 
 
 def test_split_tags():

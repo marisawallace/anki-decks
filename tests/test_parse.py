@@ -41,23 +41,22 @@ def test_split_sections_ignores_hash_in_fenced_code():
     assert "# not a heading" in sections["back"]
 
 
-def test_parse_card_defaults_id_to_stem():
-    card = parse_card("# Front\na\n\n# Back\nb\n", "casa", deck_tags=("deck",))
-    assert card.card_id == "casa"
-    assert card.tags == ("deck",)
-    assert card.fields == {"front": "a", "back": "b"}
+def test_parse_card_requires_id():
+    with pytest.raises(ValueError, match="no 'id' in frontmatter"):
+        parse_card("# Front\na\n\n# Back\nb\n", "casa")
 
 
-def test_parse_card_id_override_and_tag_merge():
+def test_parse_card_id_and_tag_merge():
     text = "---\nid: custom\ntags: [extra]\n---\n# Front\na\n\n# Back\nb\n"
     card = parse_card(text, "ignored", deck_tags=("deck",))
     assert card.card_id == "custom"
     assert card.tags == ("deck", "extra")
+    assert card.fields == {"front": "a", "back": "b"}
 
 
 def test_parse_card_no_sections_errors():
     with pytest.raises(ValueError, match="no '# Heading'"):
-        parse_card("just prose, no headings", "x")
+        parse_card("---\nid: x\n---\njust prose, no headings", "x")
 
 
 def test_parse_deck_meta_ok():
@@ -85,27 +84,29 @@ def test_render_markdown_passes_cloze_through():
 
 
 def test_card_fields_html_unknown_section_errors():
-    card = parse_card("# Front\na\n\n# Middle\nb\n", "x")
+    card = parse_card("---\nid: x\n---\n# Front\na\n\n# Middle\nb\n", "x")
     with pytest.raises(ValueError, match="unknown field section"):
         card_fields_html(card, "basic")
 
 
 def test_card_fields_html_missing_required_errors():
-    card = parse_card("# Front\na\n", "x")
+    card = parse_card("---\nid: x\n---\n# Front\na\n", "x")
     with pytest.raises(ValueError, match="missing required field 'Back'"):
         card_fields_html(card, "basic")
 
 
 def test_card_fields_html_optional_extra_ok():
-    card = parse_card("# Text\n{{c1::a}}\n", "x")
+    card = parse_card("---\nid: x\n---\n# Text\n{{c1::a}}\n", "x")
     html = card_fields_html(card, "cloze")
     assert "{{c1::a}}" in html[0]
     assert html[1] == ""
 
 
 def test_build_note_guid_is_stable_and_content_independent():
-    card1 = parse_card("# Front\na\n\n# Back\nb\n", "casa")
-    card2 = parse_card("# Front\nDIFFERENT\n\n# Back\nALSO DIFFERENT\n", "casa")
+    card1 = parse_card("---\nid: casa\n---\n# Front\na\n\n# Back\nb\n", "casa")
+    card2 = parse_card(
+        "---\nid: casa\n---\n# Front\nDIFFERENT\n\n# Back\nALSO DIFFERENT\n", "casa"
+    )
     n1 = build_note(card1, "basic")
     n2 = build_note(card2, "basic")
     assert n1.guid == "casa"  # the card_id, with no deck_id prefix

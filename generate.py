@@ -40,6 +40,14 @@ def discover_decks(decks_dir: Path) -> list[Path]:
     return sorted(p for p in decks_dir.iterdir() if (p / "deck.yaml").is_file())
 
 
+def read_deck_or_exit(folder: Path) -> ParsedDeck:
+    """``read_deck`` but turn a parse/validation error into a clean CLI message."""
+    try:
+        return read_deck(folder)
+    except ValueError as exc:
+        raise SystemExit(f"deck {folder.name!r}: {exc}")
+
+
 def check_ids_unique(decks: list[tuple[Path, ParsedDeck]]) -> None:
     """Fail loudly on duplicate deck_ids or card GUIDs across all decks.
 
@@ -97,7 +105,7 @@ def main() -> None:
     sync_dir = None if args.no_sync else args.sync_dir
 
     # Read & ID-check ALL decks (so dup deck_ids are caught even for a 1-deck build).
-    everything = [(f, read_deck(f)) for f in discover_decks(args.decks_dir)]
+    everything = [(f, read_deck_or_exit(f)) for f in discover_decks(args.decks_dir)]
     check_ids_unique(everything)
 
     targets = everything
