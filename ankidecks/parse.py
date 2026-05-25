@@ -14,6 +14,7 @@ import yaml
 
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n?---\s*\n?(.*)$", re.DOTALL)
 _H1_RE = re.compile(r"^#\s+(.+?)\s*$")
+_FENCE_RE = re.compile(r"^\s*(```|~~~)")
 
 VALID_NOTE_TYPES = ("basic", "basic-reverse", "cloze")
 
@@ -60,18 +61,23 @@ def split_sections(body: str) -> dict[str, str]:
     """Split a card body into ``# Heading`` sections.
 
     Heading text is lowercased to form the key; section content has surrounding
-    blank lines stripped. Text before the first heading is ignored.
+    blank lines stripped. Text before the first heading is ignored. ``#`` lines
+    inside fenced code blocks (``` or ~~~) are content, not headings, so code
+    fields can contain comments.
     """
     sections: dict[str, str] = {}
     current: str | None = None
     lines: list[str] = []
+    in_fence = False
 
     def flush() -> None:
         if current is not None:
             sections[current] = "\n".join(lines).strip("\n")
 
     for line in body.splitlines():
-        heading = _H1_RE.match(line)
+        if _FENCE_RE.match(line):
+            in_fence = not in_fence
+        heading = None if in_fence else _H1_RE.match(line)
         if heading:
             flush()
             current = heading.group(1).strip().lower()

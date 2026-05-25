@@ -34,6 +34,13 @@ def test_split_sections():
     assert sections == {"front": "la casa", "back": "the house"}
 
 
+def test_split_sections_ignores_hash_in_fenced_code():
+    body = "# Front\nname a comment\n\n# Back\n```python\n# not a heading\nx = 1\n```\n"
+    sections = split_sections(body)
+    assert set(sections) == {"front", "back"}
+    assert "# not a heading" in sections["back"]
+
+
 def test_parse_card_defaults_id_to_stem():
     card = parse_card("# Front\na\n\n# Back\nb\n", "casa", deck_tags=("deck",))
     assert card.card_id == "casa"
@@ -99,7 +106,12 @@ def test_card_fields_html_optional_extra_ok():
 def test_build_note_guid_is_stable_and_content_independent():
     card1 = parse_card("# Front\na\n\n# Back\nb\n", "casa")
     card2 = parse_card("# Front\nDIFFERENT\n\n# Back\nALSO DIFFERENT\n", "casa")
-    n1 = build_note(card1, 999, "basic")
-    n2 = build_note(card2, 999, "basic")
-    assert n1.guid == "999:casa"
+    n1 = build_note(card1, "basic")
+    n2 = build_note(card2, "basic")
+    assert n1.guid == "casa"  # the card_id, with no deck_id prefix
     assert n1.guid == n2.guid  # edits don't change the GUID
+
+
+def test_build_note_guid_uses_frontmatter_id():
+    card = parse_card("---\nid: abc123\n---\n# Front\na\n\n# Back\nb\n", "casa")
+    assert build_note(card, "basic").guid == "abc123"

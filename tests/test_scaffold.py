@@ -26,21 +26,25 @@ def test_render_deck_yaml_roundtrips_through_parser():
 
 
 def test_render_card_md_roundtrips_through_parser():
-    text = render_card_md("basic", {"Front": "la casa", "Back": "the house"}, ("noun",))
+    text = render_card_md(
+        "basic", {"Front": "la casa", "Back": "the house"}, "uuid-1", ("noun",)
+    )
     card = parse_card(text, "la-casa", deck_tags=("deck",))
+    assert card.card_id == "uuid-1"  # identity comes from frontmatter, not filename
     assert card.fields == {"front": "la casa", "back": "the house"}
     assert card.tags == ("deck", "noun")
 
 
 def test_render_card_md_omits_empty_optional_field():
-    text = render_card_md("cloze", {"Text": "{{c1::x}}", "Extra": ""})
+    text = render_card_md("cloze", {"Text": "{{c1::x}}", "Extra": ""}, "uuid-2")
     assert "# Extra" not in text
     assert "{{c1::x}}" in text
 
 
-def test_render_card_md_no_tags_has_no_frontmatter():
-    text = render_card_md("basic", {"Front": "a", "Back": "b"})
-    assert not text.startswith("---")
+def test_render_card_md_writes_id_frontmatter_even_without_tags():
+    text = render_card_md("basic", {"Front": "a", "Back": "b"}, "uuid-3")
+    assert text.startswith("---\nid: uuid-3\n")
+    assert "tags:" not in text
 
 
 def test_parse_tsv_with_newline_escape():

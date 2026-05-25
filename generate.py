@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import shutil
-from datetime import datetime
 from pathlib import Path
 
 from ankidecks.build import build_package
@@ -36,31 +35,53 @@ def read_deck(folder: Path) -> ParsedDeck:
     return ParsedDeck(meta=meta, cards=cards)
 
 
-def discover_decks(decks_dir: Path, only: str | None) -> list[Path]:
-    folders = sorted(p for p in decks_dir.iterdir() if (p / "deck.yaml").is_file())
-    if only is not None:
-        folders = [p for p in folders if p.name == only]
-        if not folders:
-            raise SystemExit(f"no deck folder named {only!r} under {decks_dir}")
-    return folders
+def discover_decks(decks_dir: Path) -> list[Path]:
+    """All deck folders (those containing a deck.yaml), sorted by name."""
+    return sorted(p for p in decks_dir.iterdir() if (p / "deck.yaml").is_file())
 
 
-def build_deck(folder: Path, output_dir: Path, sync_dir: Path | None) -> None:
-    """Build one deck: write a timestamped archive and (optionally) sync a copy."""
-    parsed = read_deck(folder)
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+def check_ids_unique(decks: list[tuple[Path, ParsedDeck]]) -> None:
+    """Fail loudly on duplicate deck_ids or card GUIDs across all decks.
 
+    A duplicate ``deck_id`` (e.g. from copying a deck folder as a template) makes
+    Anki *merge* the decks on import; a duplicate GUID makes one card silently
+    overwrite another. Both are catastrophic and silent on-device, so we catch
+    them at build time.
+    """
+    seen_deck: dict[int, str] = {}
+    seen_guid: dict[str, str] = {}
+    for folder, parsed in decks:
+        did = parsed.meta.deck_id
+        if did in seen_deck:
+            raise SystemExit(
+                f"duplicate deck_id {did} in {folder.name!r} and {seen_deck[did]!r} "
+                "— each deck.yaml needs its own deck_id (did you copy a folder?)"
+            )
+        seen_deck[did] = folder.name
+        for card in parsed.cards:
+            if card.card_id in seen_guid:
+                raise SystemExit(
+                    f"duplicate card id {card.card_id!r} in {folder.name!r} and "
+                    f"{seen_guid[card.card_id]!r} — ids must be globally unique"
+                )
+            seen_guid[card.card_id] = folder.name
+
+
+def build_deck(
+    folder: Path, parsed: ParsedDeck, output_dir: Path, sync_dir: Path | None
+) -> None:
+    """Build one deck: write a stable-named .apkg and (optionally) sync a copy."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    archive = output_dir / f"{folder.name}-{stamp}.apkg"
-    build_package(parsed).write_to_file(str(archive))
+    apkg = output_dir / f"{folder.name}.apkg"
+    build_package(parsed).write_to_file(str(apkg))
 
     synced = None
     if sync_dir is not None:
         sync_dir.mkdir(parents=True, exist_ok=True)
         synced = sync_dir / f"{folder.name}.apkg"
-        shutil.copyfile(archive, synced)
+        shutil.copyfile(apkg, synced)
 
-    detail = f"-> {archive}" + (f"  +  {synced}" if synced else "")
+    detail = f"-> {apkg}" + (f"  +  {synced}" if synced else "")
     print(f"  {parsed.meta.name}: {len(parsed.cards)} cards  {detail}")
 
 
@@ -74,10 +95,20 @@ def main() -> None:
     args = ap.parse_args()
 
     sync_dir = None if args.no_sync else args.sync_dir
-    folders = discover_decks(args.decks_dir, args.deck)
-    print(f"Building {len(folders)} deck(s):")
-    for folder in folders:
-        build_deck(folder, args.output_dir, sync_dir)
+
+    # Read & ID-check ALL decks (so dup deck_ids are caught even for a 1-deck build).
+    everything = [(f, read_deck(f)) for f in discover_decks(args.decks_dir)]
+    check_ids_unique(everything)
+
+    targets = everything
+    if args.deck is not None:
+        targets = [(f, p) for f, p in everything if f.name == args.deck]
+        if not targets:
+            raise SystemExit(f"no deck folder named {args.deck!r} under {args.decks_dir}")
+
+    print(f"Building {len(targets)} deck(s):")
+    for folder, parsed in targets:
+        build_deck(folder, parsed, args.output_dir, sync_dir)
 
 
 if __name__ == "__main__":

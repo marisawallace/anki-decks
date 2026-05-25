@@ -24,11 +24,16 @@ $py -m pytest -q                           # pure-core tests, no Anki needed
 
 ```
 Claude  ──TSV──▶  add_cards.py  ──▶  decks/<slug>/*.md  ──▶  generate.py  ──▶  .apkg
-(terse, cheap)    (explode)         (canonical source)      (build+copy)       │
+(terse, cheap)    (explode once)     (canonical source)      (build+copy)       │
                                                                     ┌──────────┴──────────┐
-                                                          output-decks/<slug>-<ts>.apkg   ~/Documents/syncthing/anki-decks/<slug>.apkg
-                                                          (timestamped archive)           (stable name → phone)
+                                                          output-decks/<slug>.apkg        ~/Documents/syncthing/anki-decks/<slug>.apkg
+                                                          (local build, overwritten)      (stable name → phone)
 ```
+
+The TSV→md step is **one-time and add-only** (see "Terse authoring format" below):
+`add_cards.py` mints a UUID identity for each card and copies the consumed TSV
+into `decks/<slug>/_sources/`. After that, the `.md` files are the source of
+truth — edit them in place; never re-run a TSV to update cards.
 
 Code layout (pure core vs imperative shell, per repo conventions):
 - `ankidecks/parse.py` — pure: source text → records.
@@ -48,11 +53,13 @@ note_type: basic-reverse   # basic | basic-reverse | cloze
 tags: [spanish, vocab]     # applied to every card in the deck
 ```
 
-**`decks/<slug>/<id>.md`** — one per card. The `#` (H1) headings are the note's
-fields (case-insensitive). Frontmatter is optional, metadata only.
+**`decks/<slug>/<label>.md`** — one per card. The filename is a human-readable
+label (slug of the first field); identity lives in the frontmatter `id`. The `#`
+(H1) headings are the note's fields (case-insensitive).
 ```markdown
 ---
-tags: [irregular]          # optional, merged with deck tags
+id: a1f3c9d24e8b4f7a9c2e6b1d8f0a3c57   # stable UUID = the note's identity
+tags: [irregular]                      # optional, merged with deck tags
 ---
 # Front
 la casa
@@ -60,6 +67,10 @@ la casa
 # Back
 the house  — multi-line **markdown**, lists, `code`, tables all render
 ```
+Because the H1 `#` at the start of a line delimits fields, **don't begin a line
+of card content with `# ` (single hash + space)** — use `##`+ for in-card
+headings. `#` lines inside fenced code blocks (```` ``` ````/`~~~`) are safe;
+they're treated as content, so code comments render fine.
 Cloze cards use fields `Text` / `Extra` and native Anki syntax:
 ```markdown
 # Text
@@ -78,12 +89,17 @@ Optional hint shown with the answer.
 ### IDs and updates (don't break this)
 Re-importing a rebuilt `.apkg` *updates* a deck instead of duplicating it only
 because identifiers are stable:
-- `deck_id` is a fixed literal in `deck.yaml`.
-- A note's GUID is `"<deck_id>:<card_id>"`, where `card_id` is the **filename
-  stem** (or a frontmatter `id:`). It is set directly on the note and is
-  **independent of card content** — so editing a card keeps its review history.
-- Renaming a card file = a new card. To rename freely, first pin an `id:` in its
-  frontmatter.
+- `deck_id` is a fixed literal in `deck.yaml`, unique per deck.
+- A note's GUID is its **`card_id`** — the frontmatter `id` (a UUID minted by
+  the tooling), falling back to the filename stem if absent. It is set directly
+  on the note and is **independent of both card content and deck**, so:
+  - editing a card's text keeps its review history;
+  - **renaming the `.md` file keeps its history** (identity is in the frontmatter);
+  - **moving a card's `.md` to another deck folder keeps its history** (no
+    `deck_id` is baked into the GUID).
+- Hand-authored cards without an `id` use the filename stem as identity — fine,
+  but then renaming = a new card, and two such files sharing a stem across decks
+  collide. `generate.py` fails loudly on any duplicate `card_id` or `deck_id`.
 
 ## Terse authoring format (TSV) — how Claude should emit cards
 
@@ -100,10 +116,19 @@ el perro	the dog	noun animal
 correr	to run\n(irregular)	verb
 ```
 - `cloze` decks use `text` / `extra` columns instead of `front` / `back`.
-- `id` is optional → defaults to a slug of the first field.
+- **Don't emit an `id` column** — `add_cards.py` mints a UUID per card (writing
+  UUIDs in the TSV just burns tokens). Only set `id` to deliberately override.
 - `tags` (optional) are split on commas/whitespace and merged with deck tags.
 - Use literal `\n` in a cell for a line break; reach for per-card `.md` only when
   a card genuinely needs rich multi-line markdown (lists, code blocks).
+
+**Run each TSV once.** `add_cards.py` is add-only: every row becomes a *new* card
+and the TSV is archived to `decks/<slug>/_sources/`. It does **not** update or
+de-duplicate, so re-running a TSV duplicates its cards.
+- To **edit** existing cards: change their `.md` files directly (identity is the
+  frontmatter `id`, so edits and even renames keep review history).
+- To **add more** cards later: write a *new* TSV containing only the new cards
+  and run `add_cards.py` again.
 
 ## Authoring a deck from whole cloth
 
@@ -130,7 +155,13 @@ When asked to create a deck:
 
 ## Gotchas
 - `deck_id` and the model IDs in `models.py` are permanent; changing them orphans
-  existing reviews. `new_deck.py` assigns each deck's `deck_id` once.
+  existing reviews. `new_deck.py` assigns each deck's `deck_id` once. **Never copy
+  a deck folder to start a new deck** — you'd duplicate its `deck_id` (Anki merges
+  the decks on import). `generate.py` catches this, but `new_deck.py` is the right
+  way to start one.
+- **Deleting a card `.md` does not remove it from the phone.** `.apkg` import only
+  adds/updates notes; it never deletes. To retire a card, delete it in Anki itself
+  (desktop/AnkiDroid). Decks built here only grow on-device.
 - genanki writes `collection.anki2` inside the `.apkg`; that's expected and
   imports fine on desktop, AnkiDroid, and AnkiMobile.
 - Tabs matter in the TSV — write it with the Write tool, not via shell echo.

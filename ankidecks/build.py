@@ -60,12 +60,18 @@ def _sanitize_tags(tags: tuple[str, ...]) -> list[str]:
     return [t.replace(" ", "_") for t in tags if t]
 
 
-def build_note(card: Card, meta_deck_id: int, note_type: str) -> genanki.Note:
-    """Build a genanki Note with a stable, content-independent GUID."""
+def build_note(card: Card, note_type: str) -> genanki.Note:
+    """Build a genanki Note with a stable, content-independent GUID.
+
+    The GUID is the card's ``card_id`` (a globally-unique UUID for tooling-
+    generated cards). It is *not* derived from content, so editing a card keeps
+    its review history, and it carries no deck_id, so a card can move between
+    deck folders without losing history.
+    """
     return genanki.Note(
         model=model_for(note_type),
         fields=card_fields_html(card, note_type),
-        guid=f"{meta_deck_id}:{card.card_id}",
+        guid=card.card_id,
         tags=_sanitize_tags(card.tags),
     )
 
@@ -75,5 +81,5 @@ def build_package(parsed: ParsedDeck) -> genanki.Package:
     meta = parsed.meta
     deck = genanki.Deck(meta.deck_id, meta.name)
     for card in parsed.cards:
-        deck.add_note(build_note(card, meta.deck_id, meta.note_type))
+        deck.add_note(build_note(card, meta.note_type))
     return genanki.Package(deck)

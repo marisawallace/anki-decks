@@ -33,18 +33,24 @@ def render_deck_yaml(
 
 
 def render_card_md(
-    note_type: str, values: dict[str, str], tags: tuple[str, ...] = ()
+    note_type: str,
+    values: dict[str, str],
+    card_id: str,
+    tags: tuple[str, ...] = (),
 ) -> str:
     """Produce the text of one card ``.md`` file.
 
     ``values`` maps field name -> markdown (case-insensitive). Optional fields
-    left blank are omitted. Per-card ``tags`` go in frontmatter; the card id is
-    carried by the filename, never duplicated here.
+    left blank are omitted. The stable ``card_id`` (a UUID) is written to
+    frontmatter so the filename stays a human-readable label that can be renamed
+    without changing the card's identity. Per-card ``tags`` also go in
+    frontmatter.
     """
     lower = {k.lower(): v for k, v in values.items()}
-    parts: list[str] = []
+    fm = [f"id: {card_id}"]
     if tags:
-        parts.append("---\ntags: [" + ", ".join(tags) + "]\n---")
+        fm.append("tags: [" + ", ".join(tags) + "]")
+    parts: list[str] = ["---\n" + "\n".join(fm) + "\n---"]
     for field in fields_for(note_type):
         text = (lower.get(field.lower()) or "").strip()
         if text:
