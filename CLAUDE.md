@@ -1,9 +1,11 @@
 # anki-decks — project guide
 
 Build Anki decks from plain-Markdown source. Author cards (often with Claude),
-turn them into `.apkg` files with genanki, and drop copies in a syncthing folder
-that reaches the phone. The repo-wide conventions in `../CLAUDE.md` apply
-(functional core / imperative shell, `uv` for Python, immutability).
+turn them into `.apkg` files with
+[genanki](https://github.com/kerrickstaley/genanki), and drop copies in a
+syncthing folder that reaches the phone. The repo-wide conventions in
+`../CLAUDE.md` apply (functional core / imperative shell, `uv` for Python,
+immutability).
 
 The headline use case: **"make me a deck about X"** → Claude scaffolds the deck,
 generates the cards, builds it, and it shows up on the phone. The
@@ -42,6 +44,18 @@ Code layout (pure core vs imperative shell, per repo conventions):
 - `ankidecks/scaffold.py` — pure: render deck.yaml / card.md, slugify, parse TSV.
 - `ankidecks/decks_io.py` — impure: filesystem helpers for the scripts.
 - `generate.py`, `new_deck.py`, `add_cards.py`, `new_card.py` — imperative shells.
+
+### Building
+```bash
+python generate.py                 # build every deck
+python generate.py --deck example  # just one deck (folder name)
+python generate.py --no-sync       # skip the syncthing copy
+python generate.py --sync-dir PATH # override the destination
+```
+Each build writes `output-decks/<slug>.apkg` (stable name, overwritten,
+gitignored) and copies it to `~/Documents/syncthing/anki-decks/<slug>.apkg` for
+the phone. Before building, `generate.py` checks that all `deck_id`s and card ids
+are unique and aborts if not.
 
 ## Source format
 
