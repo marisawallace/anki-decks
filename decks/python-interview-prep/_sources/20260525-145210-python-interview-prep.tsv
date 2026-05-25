@@ -1,0 +1,123 @@
+front	back	tags
+Python: which values are falsy? (Ruby: only `nil`/`false`)	`False`, `None`, `0`, `0.0`, `""`, `[]`, `{}`, `set()`, `()`, and any empty collection. Everything else is truthy.	ruby-diff footgun
+Logical operators: Python equivalents of Ruby/JS `&&`, `||`, `!`	`and`, `or`, `not` (keywords, not symbols). `&`/`|`/`^` are bitwise, not boolean.	ruby-diff syntax
+Python's equivalent of `nil`, and how to test for it	`None`. Test identity with `x is None` / `x is not None` (not `== None`).	ruby-diff syntax
+Ternary expression in Python (Ruby/JS: `cond ? a : b`)	`a if cond else b`	ruby-diff syntax
+Does Python have `unless`, `until`, or postfix conditionals (`do_x if cond`)?	No. Only `if`/`elif`/`else` and `while`. No statement modifiers, no `unless`/`until`.	ruby-diff
+String interpolation in Python (Ruby: `"hi #{name}"`)	f-strings: `f"hi {name}"`. Format specs: `f"{x:.2f}"`, `f"{x:>5}"`, `f"{x=}"` (debug).	ruby-diff string
+Instantiate a class `Foo` (Ruby: `Foo.new`, JS: `new Foo()`)	`Foo()` — no `new`, no `.new`. `__init__` is the constructor.	ruby-diff syntax
+Define a constructor and instance attributes	```python\nclass Dog:\n    def __init__(self, name):\n        self.name = name\n```\n`self` is explicit and is the first param of every method.	ruby-diff syntax
+Does Python auto-return the last expression? (Ruby does)	No. You must write `return` explicitly; functions without it return `None`.	ruby-diff footgun
+Are `?` and `!` allowed in Python method names? (`empty?`, `save!`)	No. Identifiers are `[A-Za-z_][A-Za-z0-9_]*`. Convention: `is_empty()`, and trailing `_` to avoid keywords (`class_`).	ruby-diff
+Map a function over a list (Ruby: `arr.map { ... }`)	List comprehension: `[f(x) for x in arr]` — Slatkin: prefer this. Reach for `list(map(f, arr))` only when `f` is an existing named function.	ruby-diff comprehension
+Filter a list (Ruby: `arr.select { ... }`)	`[x for x in arr if cond(x)]` — Slatkin: prefer this. Reach for `list(filter(pred, arr))` only with an existing named predicate.	ruby-diff comprehension
+Reduce/fold a list (Ruby: `arr.reduce(:+)`)	`from functools import reduce; reduce(lambda a, b: a+b, arr, 0)`. For sums just use `sum(arr)`.	ruby-diff stdlib
+Repeat a string/list N times (Ruby: `"ab"*3`)	Same: `"ab" * 3` → `"ababab"`; `[0] * 3` → `[0, 0, 0]`.	syntax
+Is Python's `range`/slice end inclusive or exclusive?	Exclusive. `range(0, 5)` → 0,1,2,3,4. `a[2:5]` excludes index 5.	footgun syntax
+Swap two variables	`a, b = b, a` (tuple packing/unpacking).	syntax
+Increment a variable (no `++` in Python)	`x += 1`. There is no `++`/`--`.	ruby-diff syntax
+Integer (floor) division and remainder	`7 // 2` → 3, `7 % 2` → 1. `divmod(7, 2)` → `(3, 1)`. Note `-7 // 2` → -4 (floors toward -∞).	footgun syntax
+Exponentiation, and what does `^` do?	Power is `**` (`2 ** 10`). `^` is bitwise XOR, NOT power.	footgun ruby-diff
+Equality vs identity: `==` vs `is`	`==` compares values; `is` compares object identity. Use `is` only for `None`/`True`/`False` singletons.	footgun ruby-diff
+Switch/case on a value	`match x:` / `case 1:` / `case _:` (3.10+). Pre-3.10 use an `if/elif` chain or a dict dispatch.	ruby-diff syntax
+Create a set literal, and the empty-set gotcha	`{1, 2, 3}` is a set; but `{}` is an empty **dict**. Empty set is `set()`.	set footgun
+Add to / remove from a set	`s.add(x)`; `s.remove(x)` (KeyError if absent); `s.discard(x)` (no error if absent).	set
+Membership test in a set/dict — complexity?	`x in s` — average O(1) for set/dict (hashing). For a list it's O(n).	set footgun
+Set operations: union, intersection, difference, symmetric diff	`a | b`, `a & b`, `a - b`, `a ^ b`. Method forms: `.union`, `.intersection`, `.difference`, `.symmetric_difference`.	set
+Set and dict comprehensions	Set: `{x*x for x in nums}`. Dict: `{k: v for k, v in pairs}`.	set comprehension
+Immutable, hashable set (usable as dict key / set element)	`frozenset([1, 2, 3])`.	set
+Sort a list in place vs. get a sorted copy	`lst.sort()` mutates, returns `None`. `sorted(iterable)` returns a new list and works on any iterable.	sorting footgun
+What can you call `.sort()` on?	Only on a `list`. `sorted()` works on any iterable (tuples, sets, dict views, generators).	sorting
+Sort by a custom key (e.g. by string length)	`words.sort(key=len)` or `sorted(words, key=lambda w: len(w))`.	sorting
+Sort descending	`lst.sort(reverse=True)` or `sorted(lst, reverse=True)`.	sorting
+Sort by two keys with a tiebreak	Return a tuple from the key: `sorted(people, key=lambda p: (p.age, p.name))` — sorts by age, then name.	sorting
+Multi-key sort with mixed directions (age desc, name asc)	Negate the numeric key: `key=lambda p: (-p.age, p.name)`. For non-numeric mixed order, sort twice (Python sort is stable): sort by minor key first, then major.	sorting footgun
+Sort dict items by value	`sorted(d.items(), key=lambda kv: kv[1])` → list of `(key, value)` tuples.	sorting dict
+Is Python's sort stable?	Yes — equal elements keep their original relative order. Lets you do multi-pass sorts.	sorting
+Get a default when a dict key may be missing (Ruby: `h.fetch(k, default)`)	`d.get(k, default)` — returns `default` (or `None`) instead of raising. `d[k]` raises `KeyError`.	dict footgun
+Does `key in dict` check keys or values?	Keys only. To check values: `val in d.values()` (O(n)).	dict footgun
+Iterate a dict's keys, values, and pairs	`for k in d:` (keys), `for v in d.values():`, `for k, v in d.items():`.	dict
+`setdefault`: what does it do?	`d.setdefault(k, []).append(x)` — returns `d[k]`, inserting `k: default` first if missing. One-liner for grouping — but Slatkin prefers `defaultdict` when repeatedly building internal state.	dict
+`defaultdict` for auto-initializing values	`from collections import defaultdict; d = defaultdict(list); d[k].append(x)`. Missing keys auto-create via the factory (`int`→0, `list`→[], `set`→set()). Slatkin: prefer over `setdefault` for building state — `setdefault` constructs the default on every call, even on hits.	dict stdlib
+Count occurrences of items	`from collections import Counter; c = Counter(items)`. `c[x]` is 0 if absent; `c.most_common(3)` → top-3 `(item, count)`.	dict stdlib
+Merge two dicts	`{**a, **b}` (b wins on conflicts), or `a | b` (3.9+), or `a.update(b)` (mutates a).	dict syntax
+Remove a key from a dict	`del d[k]` (KeyError if absent) or `d.pop(k, default)` (returns value, default if absent).	dict
+Loop over a list with both index and item (Ruby: `each_with_index`)	`for i, x in enumerate(lst):`. Start at 1: `enumerate(lst, start=1)`.	list syntax
+Iterate two lists in parallel (Ruby: `a.zip(b)`)	`for x, y in zip(a, b):`. Stops at the shorter; `itertools.zip_longest` to pad.	list stdlib
+Reverse a list/string	`a[::-1]` (new copy). In place for lists: `a.reverse()`. As iterator: `reversed(a)`.	list string
+Slice syntax: `a[start:stop:step]`	`a[2:5]` items 2–4; `a[:3]` first 3; `a[-2:]` last 2; `a[::2]` every other; `a[::-1]` reversed.	list syntax
+List methods: add one vs. add many	`lst.append(x)` adds one element; `lst.extend(iterable)` / `lst += iterable` adds each item; `lst.insert(i, x)` at index.	list
+Remove from a list: by index vs by value	`lst.pop(i)` removes & returns index i (default last); `lst.remove(val)` removes first matching value (ValueError if absent).	list
+List comprehension with a condition	Filter: `[x for x in xs if x > 0]`. Conditional value: `[x if x > 0 else 0 for x in xs]` (note position differs!).	comprehension footgun
+Footgun: copying a list vs aliasing	`b = a` aliases (same object). Copy: `b = a[:]`, `b = list(a)`, or `b = a.copy()`. Nested: `copy.deepcopy(a)`.	footgun list
+Footgun: building a 2D grid	`[[0]*cols for _ in range(rows)]`. NOT `[[0]*cols]*rows` — that makes `rows` references to the SAME inner list.	footgun list
+Footgun: mutable default argument	`def f(x, acc=[])` reuses the SAME list across calls. Use `def f(x, acc=None):` then `if acc is None: acc = []` — NOT `acc = acc or []`, which discards a legitimately-passed empty list.	footgun
+Footgun: late-binding closures in a loop	`[lambda: i for i in range(3)]` all return 2. Capture now: `lambda i=i: i`.	footgun
+Are dicts ordered in Python?	Yes — insertion order is guaranteed (3.7+). Iteration yields keys in insert order.	dict
+Footgun: modifying a list/dict while iterating it	Don't. Iterate a copy (`for x in list(d):`) or build a new collection.	footgun
+Split a string / join a list of strings	`"a,b,c".split(",")` → list. `s.split()` splits on any whitespace. `",".join(["a","b"])` → `"a,b"`.	string
+Strip whitespace / characters from a string	`s.strip()` both ends, `s.lstrip()`/`s.rstrip()` one end. `s.strip(",.")` strips those chars.	string
+Are Python strings mutable?	No — immutable. `s[0] = "x"` errors. Build new strings or use a `list(s)` then `"".join(...)`.	string ruby-diff
+Replace text in a string	`s.replace(old, new)` — returns a new string (replaces all by default; pass count to limit).	string
+Find a substring's index	`s.find(sub)` → index or -1; `s.index(sub)` → index or ValueError. `sub in s` for a boolean.	string
+Char ↔ code point	`ord("a")` → 97; `chr(97)` → `"a"`.	string stdlib
+String predicates (boolean tests)	`s.isdigit()`, `s.isalpha()`, `s.isalnum()`, `s.isspace()`, `s.startswith(p)`, `s.endswith(p)` — all return a bool.	string
+String case transforms	`s.lower()`, `s.upper()`, `s.title()`, `s.capitalize()`, `s.swapcase()` — strings are immutable, so each returns a new string.	string
+A double-ended queue (fast pops from both ends)	`from collections import deque; q = deque(); q.append(x); q.popleft()`. O(1) both ends — use for BFS.	stdlib
+Min-heap: push, pop, and the max-heap gotcha	`import heapq; heapq.heappush(h, x); heapq.heappop(h)` → smallest. Python has ONLY a min-heap — for a max-heap push `-x` (or use a key tuple).	stdlib footgun
+Turn a list into a heap in place	`heapq.heapify(lst)` — O(n). Then `heappush`/`heappop`.	stdlib
+N smallest / largest without full sort	`heapq.nsmallest(k, it)` / `heapq.nlargest(k, it, key=...)`.	stdlib
+Binary search into a sorted list	`import bisect; i = bisect.bisect_left(a, x)` (leftmost insert point); `bisect.insort(a, x)` inserts keeping sorted.	stdlib
+Positive and negative infinity	`float('inf')`, `float('-inf')`, or `math.inf`. Useful as initial min/max bounds.	stdlib
+`any` and `all`	`any(cond(x) for x in xs)` → True if at least one truthy; `all(...)` → True if every one truthy (and True for empty).	stdlib
+`min`/`max` by a key (e.g. longest word)	`max(words, key=len)`, `min(people, key=lambda p: p.age)`.	stdlib
+Memoize a recursive function	`from functools import cache` (or `lru_cache(maxsize=None)`); decorate with `@cache`. Great for DP/recursion.	stdlib
+Generate permutations / combinations / cartesian product	`from itertools import permutations, combinations, product`. e.g. `combinations(xs, 2)`, `product(a, b)`.	stdlib
+Sum / running accumulate	`sum(xs)`, `sum(xs, start)`. Running totals: `itertools.accumulate(xs)`.	stdlib
+try/except/else/finally structure	```python\ntry:\n    risky()\nexcept ValueError as e:\n    handle(e)\nelse:\n    ran_if_no_error()\nfinally:\n    always()\n```	syntax
+Raise an exception (Ruby: `raise`)	`raise ValueError("msg")`. Re-raise current: bare `raise`.	syntax ruby-diff
+Context manager (auto-cleanup, like Ruby blocks for files)	`with open("f") as fh:` — guarantees close on exit, even on exception.	syntax
+Define a generator (lazy iterator)	Use `yield`: `def gen(): yield 1; yield 2`. Or a generator expression `(x*x for x in xs)`.	syntax
+Anonymous function / lambda	`lambda x, y: x + y`. Single expression only — no statements.	syntax
+Variadic args and keyword args	`def f(*args, **kwargs):` — `args` is a tuple, `kwargs` a dict. Call-site splat: `f(*lst, **dct)`.	syntax
+Unpack with a catch-all (Ruby splat `a, *rest = arr`)	`first, *rest = [1,2,3,4]` → `first=1, rest=[2,3,4]`. Also `*init, last = ...`.	syntax
+Walrus operator `:=` (assignment expression)	Assign within an expression: `while (line := f.readline()):` or `if (n := len(a)) > 10:`.	syntax
+Chained comparisons	`0 <= x < 10` works as expected (equivalent to `0 <= x and x < 10`). Common in range checks.	syntax
+`global` vs `nonlocal`	`global x` rebinds a module-level var inside a function; `nonlocal x` rebinds an enclosing (outer function) var.	syntax footgun
+Convert between list/tuple/set/str	`list(x)`, `tuple(x)`, `set(x)`, `"".join(x)` (str of chars), `str(x)` (repr).	syntax
+Tuple vs list — when/why	Tuples are immutable & hashable (can be dict keys / set elements); lists are mutable. Single-element tuple needs a comma: `(1,)`.	syntax footgun
+Get unique items preserving order	`list(dict.fromkeys(items))` — dedupes, keeps first-seen order. `set(items)` dedupes but loses order.	dict footgun
+Flatten a list of lists	`[x for row in grid for x in row]` (nested comprehension reads left-to-right like nested for-loops).	comprehension
+Read all input lines (competitive/interview I/O)	`import sys; data = sys.stdin.read().split()` or `for line in sys.stdin:`. `input()` reads one line (no trailing newline).	stdlib
+Format a float to N decimals	`f"{x:.2f}"` or `round(x, 2)` (note `round` does banker's rounding: `round(0.5)`→0).	string footgun
+Absolute value, and min/max of two numbers	`abs(x)`, `min(a, b)`, `max(a, b)`. `min`/`max` also take iterables and a `key`.	stdlib
+Iterate while counting down or by steps	`range(10, 0, -1)` → 10..1; `range(0, 10, 2)` → 0,2,4,6,8. Args are `range(start, stop, step)`.	syntax
+Truthy emptiness check (Pythonic)	`if not lst:` for empty list/str/dict (relies on falsy empties). Prefer over `len(lst) == 0`.	ruby-diff syntax
+Default/fallback value (Ruby: `a || b`)	`a or b` returns `a` if truthy else `b`. Careful: treats `0`/`""`/`[]` as fallback-triggering (use `a if a is not None else b` to only catch None).	ruby-diff footgun
+Check type of a value	`isinstance(x, int)` (preferred, handles subclasses), `type(x) is int` (exact). `isinstance(x, (int, float))` for multiple.	syntax
+Enumerate a string's characters with index	`for i, ch in enumerate(s):` — strings are iterable sequences of 1-char strings.	string syntax
+Get dict keys/values as a list	`list(d)` or `list(d.keys())`; `list(d.values())`; `list(d.items())`.	dict
+Comprehension over a dict to invert it	`{v: k for k, v in d.items()}` (assumes values are unique & hashable).	dict comprehension
+Pad/format an int with leading zeros	`f"{n:03d}"` → `"007"`. Right/left/center align: `f"{s:>8}"`, `f"{s:<8}"`, `f"{s:^8}"`.	string
+Sort a string's characters	`"".join(sorted(s))` — `sorted` returns a list of chars; join back into a string.	string sorting
+Count items matching a condition	`sum(1 for x in xs if cond(x))` — sum of a generator of 1s. (`sum(cond(x) for x in xs)` since bools are ints.)	comprehension stdlib
+Initialize multiple variables to the same value	`a = b = c = 0` (fine for immutables). Don't do this with a mutable like `[]` — all alias the same object.	footgun syntax
+Two-pointer / index iteration with `while`	`l, r = 0, len(a)-1; while l < r: ... l += 1; r -= 1`. No C-style `for(;;)` in Python.	syntax
+Get both quotient and remainder at once	`q, r = divmod(a, b)`. Handy for digit extraction and grid coordinate math.	stdlib
+String → list of ints (parse a line of numbers)	`[int(x) for x in line.split()]` or `list(map(int, line.split()))`.	string comprehension
+Conditional assignment based on membership	`x in {"a", "b", "c"}` — use a set literal for O(1) membership when checking against several constants.	set syntax
+Ascii lowercase/uppercase/digits constants	`import string; string.ascii_lowercase`, `.ascii_uppercase`, `.digits`. Avoids hardcoding alphabets.	stdlib string
+Reverse-iterate with index	`for i in range(len(a)-1, -1, -1):` or `for i, x in enumerate(reversed(a)):` (note i counts forward).	list footgun
+Check if all chars unique (interview classic)	`len(set(s)) == len(s)`.	set string
+Lightweight immutable record (point, interval, graph node)	`from collections import namedtuple; Point = namedtuple("Point", "x y")`. Immutable, hashable (usable as a dict key / set element), tuple-unpackable: `x, y = p`.	stdlib slatkin record
+Mutable record with auto __init__/__repr__/__eq__	`from dataclasses import dataclass`, then `@dataclass`\n`class Node:`\n`    val: int`\n`    next: "Node" = None`. Add `@dataclass(order=True)` to also get comparison methods.	stdlib slatkin record
+Returning None to signal an error — why it's a trap (Slatkin)	A caller's `if not result:` can't tell None (error) from a valid `0`/`""`/`[]`. Prefer `raise ValueError(...)` over returning None.	slatkin footgun
+Footgun: a generator/iterator is exhausted after one pass	`g = (x for x in xs)` — a second `for`/`sum` over `g` sees nothing. Materialize with `list(g)` to reuse, or write functions that take a container, not a bare iterator.	footgun generator slatkin
+Footgun: building a string in a loop	`s += piece` in a loop is O(n²) — strings are immutable, so each `+=` copies the whole string. Collect pieces in a list and `"".join(parts)` (O(n)).	footgun string perf
+Footgun: list.pop(0) / list.insert(0, x) are O(n)	Both shift every element. For a FIFO queue use `collections.deque` — `append`/`popleft` are O(1).	footgun list perf
+Number toolbox: gcd, integer sqrt, factorial, combinations	`math.gcd(a, b)`, `math.isqrt(n)` (exact int sqrt, e.g. primality bounds), `math.factorial(n)`, `math.comb(n, k)`, `math.perm(n, k)`.	stdlib math
+Sort by a custom pairwise comparator	Python 3 has no `cmp=`. `from functools import cmp_to_key; sorted(xs, key=cmp_to_key(cmp))` where `cmp(a, b)` returns negative / 0 / positive. Prefer a plain `key=` when expressible.	sorting stdlib slatkin
+Group consecutive equal items	`from itertools import groupby; for key, grp in groupby(sorted(xs)):` — `grp` is an iterator. GOTCHA: only groups *adjacent* equal items, so sort by the same key first.	stdlib itertools footgun
+Iterate several sequences as one / flatten one level	`from itertools import chain; for x in chain(a, b, c):`. `chain.from_iterable(grid)` lazily flattens one level.	stdlib itertools
+What does `else` after a for/while loop do?	Runs only if the loop finished WITHOUT hitting `break` — the "searched, found nothing" idiom. Slatkin: avoid it (it confuses readers); use a flag or a helper function instead.	syntax slatkin footgun
+Put custom objects in a heap or sorted list	`heapq`/`sorted` compare with `<`. Give the class `@dataclass(order=True)`, or push `(priority, item)` tuples (ties break left-to-right), or define `__lt__`.	stdlib sorting slatkin
