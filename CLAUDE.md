@@ -4,7 +4,9 @@ Created so Marisa and Claude can collaboratively manage and create Anki decks.
 
 The core idea is support for two "upstream" representations optimized for card creation -- TSV for Claude, and Markdown for Marisa and Claude.
 
-The pipeline is TSV -> Markdown -> apkg -> sync to Marisa's phone. genanki is used internally.
+The pipeline is TSV -> Markdown -> apkg -> syncthing to Marisa's phone -> Marisa does a manual import of the updated deck into AnkiDroid.
+
+genanki is used internally for creating the apkgs from Markdown.
 
 ## TSV
 
