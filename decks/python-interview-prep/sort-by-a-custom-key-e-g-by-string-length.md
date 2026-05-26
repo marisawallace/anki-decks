@@ -7,4 +7,4 @@ tags: [sorting]
 Sort by a custom key (e.g. by string length)
 
 # Back
-`words.sort(key=len)` or `sorted(words, key=lambda w: len(w))`.
+`words.sort(key=len)` or `sorted(words, key=len)` or pass `lambda x: len(x)`

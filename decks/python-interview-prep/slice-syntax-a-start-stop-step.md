@@ -8,3 +8,9 @@ Slice syntax: `a[start:stop:step]`
 
 # Back
 `a[2:5]` items 2–4; `a[:3]` first 3; `a[-2:]` last 2; `a[::2]` every other; `a[::-1]` reversed.
+
+Slicing returns a **new** object of the same type (list→list, str→str) — eager, not lazy. Slice syntax needs a sequence; a plain iterator has none.
+
+Lazy equivalents for an iterator:
+- every other: `islice(it, None, None, 2)` — forward-only, no negative args
+- reversed: `reversed(seq)` (iterator, sequences only) or `reversed(list(it))` for an arbitrary iterator (must materialize).

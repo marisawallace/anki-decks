@@ -7,4 +7,4 @@ tags: [string, comprehension]
 String → list of ints (parse a line of numbers)
 
 # Back
-`[int(x) for x in line.split()]` or `list(map(int, line.split()))`.
+`[int(x) for x in line.split()]` or `list(map(int, line.split()))`. Raises `ValueError`.

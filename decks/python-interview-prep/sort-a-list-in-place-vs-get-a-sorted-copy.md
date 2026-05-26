@@ -7,4 +7,4 @@ tags: [sorting, footgun]
 Sort a list in place vs. get a sorted copy
 
 # Back
-`lst.sort()` mutates, returns `None`. `sorted(iterable)` returns a new list and works on any iterable.
+`lst.sort()` mutates (lists only), returns `None`. `sorted(iterable)` returns a new list and works on any iterable.
