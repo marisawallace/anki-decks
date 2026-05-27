@@ -49,7 +49,7 @@ python -m pytest -q                           # pure-core tests, no Anki needed
 
 ## Code structure
 
-Code layout (pure core vs imperative shell, per repo conventions):
+Code layout (pure core vs imperative shell):
 - `ankidecks/parse.py` — pure: source text → records.
 - `ankidecks/models.py` — pure: the 3 genanki note types (fixed global IDs).
 - `ankidecks/build.py` — pure: records → genanki package (Markdown→HTML here).
@@ -169,4 +169,3 @@ correr	to run\n(irregular)	verb
 - Tabs matter in the TSV — write it with the Write tool, not via shell echo.
 
 - Loading on phone: the synced `<slug>.apkg` can be tapped → "Open in" Anki for a one-off. For progress that survives rebuilds, import once on desktop → AnkiWeb sync → sync the phone; thereafter re-imports update cards in place.
-```
