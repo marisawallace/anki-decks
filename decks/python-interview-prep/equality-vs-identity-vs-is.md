@@ -7,4 +7,4 @@ tags: [footgun, ruby-diff]
 Equality vs identity: `==` vs `is`
 
 # Back
-`==` compares values; `is` compares object identity. Use `is` only for `None`/`True`/`False` singletons.
+`==` compares values (calls `__eq__`); `is` compares object identity (same object in memory). Use `is` when you mean "same object" — `None`/`True`/`False` singletons, sentinel objects (`_MISSING = object()`), enum members, cycle detection. Never use `==` with `None` (`__eq__` can be overridden).

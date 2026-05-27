@@ -4,7 +4,7 @@ tags: [dict, footgun]
 ---
 
 # Front
-Get a default when a dict key may be missing (Ruby: `h.fetch(k, default)`)
+Get a default when a dict key may be missing
 
 # Back
 `d.get(k, default)` — returns `default` (or `None`) instead of raising. `d[k]` raises `KeyError`.

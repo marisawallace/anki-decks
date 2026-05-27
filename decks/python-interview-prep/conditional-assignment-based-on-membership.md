@@ -8,3 +8,7 @@ Conditional assignment based on membership
 
 # Back
 `x in {"a", "b", "c"}` — use a set literal for O(1) membership when checking against several constants.
+
+```python
+kind = "vowel" if ch in {"a", "e", "i", "o", "u"} else "consonant"
+```

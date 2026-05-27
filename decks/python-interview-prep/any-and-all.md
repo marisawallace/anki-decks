@@ -4,7 +4,7 @@ tags: [stdlib]
 ---
 
 # Front
-`any` and `all`
+Built-in functions for `any` and `all`?
 
 # Back
-`any(cond(x) for x in xs)` → True if at least one truthy; `all(...)` → True if every one truthy (and True for empty).
+Just `any` and `all`. `any(cond(x) for x in xs)` → True if at least one truthy; `all(...)` → True if every one truthy (and True for empty).
