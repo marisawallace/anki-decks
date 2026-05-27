@@ -30,13 +30,21 @@ Claude's generated TSVs do/should not contain IDs. `add_cards.py` autogenerates 
 
 ## Quickstart
 
+Requires Python 3.10+. First-time setup:
+
 ```bash
-py=$HOME/.venvs/global/bin/python          # repo-wide alias is `py`
-$py new_deck.py "Spanish::Vocab" --note-type basic-reverse --tags spanish
-$py add_cards.py spanish-vocab cards.tsv   # bulk add from a TSV (see below)
-$py new_card.py spanish-vocab "la casa" "the house"   # single card
-$py generate.py                            # build every deck -> .apkg + sync
-$py -m pytest -q                           # pure-core tests, no Anki needed
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e '.[dev]'                    # 'dev' adds pytest
+```
+
+Then:
+
+```bash
+python new_deck.py "Spanish::Vocab" --note-type basic-reverse --tags spanish
+python add_cards.py spanish-vocab cards.tsv   # bulk add from a TSV (see below)
+python new_card.py spanish-vocab "la casa" "the house"   # single card
+python generate.py                            # build every deck -> .apkg + sync
+python -m pytest -q                           # pure-core tests, no Anki needed
 ```
 
 ## Code structure

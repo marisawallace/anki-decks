@@ -5,3 +5,6 @@ __pycache__/
 output-decks/*.apkg
 # local config (see .env.example)
 .env
+# personal scratch + unconsumed TSV staging
+marisa-scratch/
+tsvs/*.tsv
