@@ -3,3 +3,5 @@ __pycache__/
 .pytest_cache/
 # generated deck archives
 output-decks/*.apkg
+# local config (see .env.example)
+.env

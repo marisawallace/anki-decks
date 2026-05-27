@@ -53,10 +53,10 @@ Code layout (pure core vs imperative shell, per repo conventions):
 ```bash
 python generate.py                 # build every deck
 python generate.py --deck example  # just one deck (folder name)
-python generate.py --no-sync       # skip the syncthing copy
-python generate.py --sync-dir PATH # override the destination
+python generate.py --no-sync       # skip the optional 2nd-destination copy
+python generate.py --sync-dir PATH # override the 2nd-destination path
 ```
-Each build writes `output-decks/<slug>.apkg` (stable name, overwritten, gitignored) and copies it to `~/Documents/syncthing/phone/anki-decks/<slug>.apkg` for the phone. Before building, `generate.py` checks that all `deck_id`s and card ids are unique and aborts if not.
+Each build writes `output-decks/<slug>.apkg` (stable name, overwritten, gitignored). If `SYNC_DIR` is set in `.env` (see `.env.example`) — typically a Syncthing folder that mirrors to your phone — the `.apkg` is also copied there. Before building, `generate.py` checks that all `deck_id`s and card ids are unique and aborts if not.
 
 ## Source format
 

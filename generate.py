@@ -4,13 +4,18 @@
 Usage:
     python generate.py                 # build every deck
     python generate.py --deck NAME     # build one deck (folder name)
-    python generate.py --no-sync       # skip the syncthing copy
-    python generate.py --sync-dir PATH # override the syncthing destination
+    python generate.py --no-sync       # skip the optional 2nd-destination copy
+    python generate.py --sync-dir PATH # override the 2nd-destination path
+
+The 2nd output destination (e.g. a Syncthing folder mirrored to a phone) is
+configured via ``SYNC_DIR`` in ``.env`` — see ``.env.example``. If unset, only
+``output-decks/`` is written.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 from pathlib import Path
 
@@ -20,7 +25,30 @@ from ankidecks.parse import ParsedDeck, parse_card, parse_deck_meta
 REPO_ROOT = Path(__file__).resolve().parent
 DECKS_DIR = REPO_ROOT / "decks"
 OUTPUT_DIR = REPO_ROOT / "output-decks"
-SYNC_DIR = Path.home() / "Documents" / "syncthing" / "phone" / "anki-decks"
+
+
+def load_dotenv(path: Path) -> dict[str, str]:
+    """Tiny KEY=VALUE parser for .env. Ignores blanks/comments; strips quotes."""
+    if not path.is_file():
+        return {}
+    env: dict[str, str] = {}
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            env[key] = value
+    return env
+
+
+def sync_dir_from_env(env: dict[str, str]) -> Path | None:
+    raw = env.get("SYNC_DIR") or os.environ.get("SYNC_DIR")
+    if not raw:
+        return None
+    return Path(os.path.expanduser(raw))
 
 
 def read_deck(folder: Path) -> ParsedDeck:
@@ -96,13 +124,19 @@ def build_deck(
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--deck", help="build only this deck (folder name)")
-    ap.add_argument("--no-sync", action="store_true", help="skip syncthing copy")
-    ap.add_argument("--sync-dir", type=Path, default=SYNC_DIR)
+    ap.add_argument("--no-sync", action="store_true", help="skip 2nd-destination copy")
+    ap.add_argument(
+        "--sync-dir",
+        type=Path,
+        default=None,
+        help="override SYNC_DIR from .env",
+    )
     ap.add_argument("--decks-dir", type=Path, default=DECKS_DIR)
     ap.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
     args = ap.parse_args()
 
-    sync_dir = None if args.no_sync else args.sync_dir
+    env_sync = sync_dir_from_env(load_dotenv(REPO_ROOT / ".env"))
+    sync_dir = None if args.no_sync else (args.sync_dir or env_sync)
 
     # Read & ID-check ALL decks (so dup deck_ids are caught even for a 1-deck build).
     everything = [(f, read_deck_or_exit(f)) for f in discover_decks(args.decks_dir)]
