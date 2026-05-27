@@ -6,7 +6,7 @@ The core idea is support for two "upstream" representations optimized for card c
 
 The pipeline is TSV -> Markdown -> apkg -> syncthing to Marisa's phone -> Marisa does a manual import of the updated deck into AnkiDroid.
 
-genanki is used internally for creating the apkgs from Markdown.
+genanki is used internally for creating the apkgs from Markdown. Anki renders HTML + CSS so we convert Markdown to those at build time.
 
 ## TSV
 
